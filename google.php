@@ -11,6 +11,8 @@ include 'config.php';
 
 <head>
     <title>Add Map</title>
+    <script src="https://use.fontawesome.com/releases/v6.2.0/js/all.js"></script>
+
 </head>
 
 <body>
@@ -19,6 +21,79 @@ include 'config.php';
             height: 400px;
             width: 100%;
         }
+
+/*
+ * Property styles in unhighlighted state.
+ */
+.property {
+  align-items: center;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  color: #263238;
+  display: flex;
+  font-size: 14px;
+  gap: 15px;
+  height: 30px;
+  justify-content: center;
+  padding: 4px;
+  position: relative;
+  position: relative;
+  transition: all 0.3s ease-out;
+  width: 30px;
+}
+
+.property::after {
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 9px solid #FFFFFF;
+  content: "";
+  height: 0;
+  left: 50%;
+  position: absolute;
+  top: 95%;
+  transform: translate(-50%, 0);
+  transition: all 0.3s ease-out;
+  width: 0;
+  z-index: 1;
+}
+.property .icon {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  color: #FFFFFF;
+}
+
+.property .icon svg {
+  height: 20px;
+  width: auto;
+}
+
+.property .details {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+}
+
+.property.highlight .icon svg {
+  width: 50px;
+  height: 50px;
+}
+
+
+/*
+ * House icon colors.
+ */
+.property.highlight:has(.fa-house) .icon {
+  color: var(--house-color);
+}
+
+.property:not(.highlight):has(.fa-house) {
+  background-color: var(--house-color);
+}
+
+.property:not(.highlight):has(.fa-house)::after {
+  border-top: 9px solid var(--house-color);
+}
     </style>
     <h3>My Google Maps Demo</h3>
     <!--The div element for the map -->
@@ -57,7 +132,7 @@ include 'config.php';
     </script>
     <script>
         // Initialize and add the map
-        let map;
+        var map;
 
         async function initMap() {
             // The location of Uluru
@@ -74,22 +149,31 @@ include 'config.php';
             map = new Map(document.getElementById("map"), {
                 zoom: 16,
                 center: position,
-                mapId: "DEMO_MAP_ID",
+                mapId: "4504f8b37365c3d0",
             });
 
             const infoWindow = new InfoWindow();
 
-            // The marker, positioned at Uluru
-            // const marker = new AdvancedMarkerElement({
-            //     map: map,
-            //     position: position,
-            //     title: "Uluru",
-            // });
+            /*
+            infoWindow.open(map);
+            map.addListener("click", (mapsMouseEvent) => {
+                // Close the current InfoWindow.
+                infoWindow.close();
+                // Create a new InfoWindow.
+                infoWindow = new google.maps.InfoWindow({
+                    position: mapsMouseEvent.latLng,
+                });
+                infoWindow.setContent(
+                    JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2),
+                );
+                infoWindow.open(map);
+            });
+            */
 
 
             const position2 = {lat: 18.28633927080087, lng: 99.50619375927566};
             const marker2 = new AdvancedMarkerElement({
-                map: map,
+                map,
                 position: position2,
                 gmpClickable: true,
                 gmpDraggable: true,
@@ -103,7 +187,7 @@ include 'config.php';
                 infoWindow.setContent(marker2.title);
                 infoWindow.open(marker2.map, marker2);
             });
-            marker2.addListener("gmp-dragend", (event) => {
+            marker2.addListener("dragend", (event) => {
                 const position = marker2.position;
 
                 infoWindow.close();
@@ -187,12 +271,99 @@ include 'config.php';
             //     return content;
             // }
 
+            // document.getElementById("delete-markers").addEventListener("click", deleteMarkers);
 
+        } // End initMap
+
+        initMap();
+
+
+        let markers = [];
+        function addMarker() {
+
+            let infoWindow = new google.maps.InfoWindow();
+
+            const defPosition = {lat: map.getCenter().lat(), lng: map.getCenter().lng()};
+            
+
+// const icon = document.createElement("div");
+
+// icon.innerHTML = '<i class="fa fa-pizza-slice fa-lg"></i>';
+
+// const faPin = new PinElement({
+//   glyph: icon,
+//   glyphColor: "#ff8300",
+//   background: "#FFD514",
+//   borderColor: "#ff8300",
+// });
+
+
+            const marker = new google.maps.marker.AdvancedMarkerElement({
+                map,
+                position: defPosition,
+                title: "New Marker",
+                content: buildContent(),
+                gmpDraggable: true,
+            });
+            markers.push(marker);
+            marker.addListener("gmp-click", (event) => {
+                const position = marker.position;
+
+                // infoWindow.close();
+                // infoWindow.setContent(marker.title);
+                // infoWindow.open(marker.map, marker);
+
+                toggleHighlight(marker);
+            });
+
+            marker.addListener("dragend", (event) => {
+                const newPosition = marker.position;
+
+                // infoWindow.close();
+                // infoWindow.setContent(`Pin dropped at: ${newPosition.lat}, ${newPosition.lng}`);
+                // infoWindow.open(marker.map, marker);
+            });
 
         }
 
-        initMap();
+        function toggleHighlight(markerView, property) {
+  if (markerView.content.classList.contains("highlight")) {
+    markerView.content.classList.remove("highlight");
+    markerView.zIndex = null;
+  } else {
+    markerView.content.classList.add("highlight");
+    markerView.zIndex = 1;
+  }
+}
+        
+
+        function buildContent(){
+            const content = document.createElement("div");
+            // content.classList.add("property");
+            content.innerHTML = `<div class="icon">
+        <i aria-hidden="true" class="fa fa-icon fa-home" title="home"></i>
+        <span class="fa-sr-only">home</span>
+    </div>
+    <div><strong>New</strong> Map html</div>`;
+            return content;
+        }
+
+        function delMarker(){
+            for (let i = 0; i < markers.length; i++) {
+                markers[i].setMap(null);
+            }
+            markers = [];
+        }
+        
     </script>
+    <form action="javascript:void(0);" method="post">
+        <div>
+            <button type="button" onclick="addMarker()">Add marker</button>
+            <button type="button" onclick="delMarker()">Remove marker</button>
+        </div>
+    </form>
+    <p>https://developers.google.com/maps/documentation/javascript/advanced-markers/add-marker</p>
+    <script></script>
 </body>
 
 </html>
